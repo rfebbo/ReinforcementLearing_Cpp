@@ -12,15 +12,15 @@
 using namespace std;
 
 /*Hyperparameters*/
-#define NUM_EPISODES 5000
-#define EXPLORE_START 0.8
+#define NUM_EPISODES 200
+#define EXPLORE_START 0.9
 #define EXPLORE_END 0.0
 #define PROB_RATE 0.1
-#define DISCOUNT 0.4
-#define LEARNING_RATE 0.1
+#define DISCOUNT 0.8
+#define LEARNING_RATE 0.2
 
 /*Discretization Parameters*/
-#define NUM_ANGLES 61
+#define NUM_ANGLES 21
 #define END_ANGLE_1 -M_PI_4
 #define END_ANGLE_2 M_PI_4
 
@@ -28,9 +28,9 @@ using namespace std;
 #define END_POSITION_1 -1
 #define END_POSITION_2 1
 
-#define NUM_VELOCITIES 5
-#define VEL_END_1 -10
-#define VEL_END_2 10
+#define NUM_VELOCITIES 7
+#define VEL_END_1 -1
+#define VEL_END_2 1
 
 /*Simulation Parameters*/
 #define INPUT_FORCE 250
@@ -55,6 +55,10 @@ void fast_sigmoid(double &value) {
 }
 
 enum class R_Type { ENDS, DISTANCE }; // reinforcement type
+
+class controller {};
+
+class RL : public controller {};
 
 class body {
 public:
@@ -285,49 +289,87 @@ private:
 
 class Env {
 public:
-  void reset();
+  void reset_averages();
+  void new_episode();
   void init(double r, long e);
   void step();
   bool is_done() { return done; }
   double get_force() { return force; }
   double get_time() { return time; }
-  double get_avg_force(long e) { return (avg_force * tot_eps) / e; }
-  double get_avg_time_alive(long e) { return (avg_time_alive * tot_eps) / e; }
-  double get_avg_num_rand_actions(long e) {
-    return ((avg_num_rand_actions * tot_eps) / e);
-  }
+  double get_avg_force() { return avg_force; }
+  double get_avg_time_alive() { return avg_time_alive; }
+  double get_avg_num_rand_actions() { return avg_rand_actions; }
+  double get_max_time_alive() { return max_time_alive; }
   pole *pole_body;
   cart *cart_body;
 
 private:
+  void reset_env();
   vector<double> P; /*state transistion probability*/
   vector<double> Q; /*state value*/
   // vector<long> R;    /*reward*/
   long num_states;
   long num_actions;
 
+  /*per episode variables*/
+  vector<double> current_run; /*force applied at each timestep*/
   bool done;
-  double force;
-  double avg_time_alive;
+  double force;              /*force applied at current step*/
+  double total_force;        /*force applied over the whole episode*/
+  double total_rand_actions; /*number of random actions taken in this episode*/
+  long num_steps;            /*number of steps in the episode*/
+  double time;               /*running time of the episode*/
+
+  double explore;   /*chance to take a random action*/
+  double reduction; /*amount to reduce explore by after an episode*/
+  long tot_eps;     /*total number of episodes*/
+
+  /*best run*/
+  vector<double> best_run;
+  double max_time_alive; /*maximum recorded lifespan*/
+
+  /*cumulative moving average vars*/
   double avg_force;
-  double explore;
-  long num_steps;
-  double avg_num_rand_actions;
-  long tot_eps;
-  double reduction;
-  double time;
+  double avg_time_alive;
+  double avg_rand_actions;
+  long eps_elapsed; /*episodes elapsed since last avg_reset*/
 };
 
-void Env::reset() {
+void Env::reset_env() {
+  total_force = 0;
+  total_rand_actions = 0;
   cart_body->reset();
   pole_body->reset();
+  current_run.clear();
   done = false;
-  // avg_time_alive = 0;
-  // avg_force = 0;
-  // num_rand_actions = 0;
   num_steps = 0;
   force = 0;
   time = 0;
+}
+
+void Env::new_episode() {
+  eps_elapsed++;
+
+  avg_force += (total_force - avg_force) / eps_elapsed;
+  avg_time_alive += (time - avg_time_alive) / eps_elapsed;
+  avg_rand_actions += (total_rand_actions - avg_rand_actions) / eps_elapsed;
+
+  if (time > max_time_alive) {
+    max_time_alive = time;
+    best_run = current_run;
+  }
+
+  if (explore > EXPLORE_END)
+    explore -= reduction;
+
+  reset_env();
+}
+
+void Env::reset_averages() {
+  avg_force = 0;
+  avg_rand_actions = 0;
+  avg_time_alive = 0;
+  eps_elapsed = 0;
 }
 
 void Env::init(double r, long e) {
@@ -337,10 +379,13 @@ void Env::init(double r, long e) {
   cart_body = new cart(R_Type::ENDS);
   num_states = pole_body->get_num_states() * cart_body->get_num_states();
   num_actions = 3;
+  eps_elapsed = 0;
+  max_time_alive = 0;
   reduction = r;
   tot_eps = e;
   explore = EXPLORE_START;
-  reset();
+  reset_env();
+  reset_averages();
 
   for (long i = 0; i < pow(num_states, 2) * num_actions; i++) {
     P.push_back(rand() / static_cast<double>(RAND_MAX));
@@ -352,6 +397,11 @@ void Env::init(double r, long e) {
     // printf("Q %i %f\n", i, Q.back());
   }
 
+  printf("Q size: %.2lf MB\n",
+         (static_cast<double>(Q.size()) * sizeof(double)) / 1048576);
+
+  printf("P size: %.2lf MB\n",
+         (static_cast<double>(P.size()) * sizeof(double)) / 1048576);
   // for (long i = 0; i < pole_body->positions.size(); i++) {
   //   R.push_back(pole_body->get_R(i));
   //   // printf("pole position: %i R: %i\n", i, pole_body->get_R(i));
@@ -364,13 +414,13 @@ void Env::init(double r, long e) {
 }
 
 void Env::step() {
-  time += TIMESTEP;
 
   long action = -1;
+  bool rand_action = false;
   double randn = rand() / static_cast<double>(RAND_MAX);
   if (randn < explore) {
-    avg_num_rand_actions += 1 / static_cast<double>(tot_eps);
-    action = -2;
+    total_rand_actions++;
+    rand_action = true;
   }
 
   double input = 0.0;
@@ -382,9 +432,10 @@ void Env::step() {
 
   for (long i = 0; i < num_actions; i++) {
     double max_p = -1;
+    int found_P = 0;
     for (long j = 0; j < num_states; j++) {
       long idx = state * num_states * num_actions + j * num_actions + i;
-      if (P[idx] > max_p) {
+      if (!found_P || P[idx] > max_p) {
         max_p = P[idx];
         next_states[i] = j; /*'j' is the most likely
                          next state given 'state' and action 'i'*/
@@ -407,7 +458,7 @@ void Env::step() {
 
   // printf("action : %i\n", action);
 
-  if (action == -2) {
+  if (rand_action) {
     action = rand() % 3;
   }
 
@@ -420,10 +471,9 @@ void Env::step() {
   else
     fprintf(stderr, "INVALID ACTION\n");
 
-  force += (1 / TAU) * (input - force) * TIMESTEP;
+  // force += (1 / TAU) * (input - force) * TIMESTEP;
+  force = input;
 
-  num_steps++;
-  avg_force += force / tot_eps;
   // printf("force %lf\n", force);
 
   double p_a; /*pole acceleration*/
@@ -476,8 +526,16 @@ void Env::step() {
 
   long reward = cart_body->get_R() + pole_body->get_R();
 
+  bool found_actual_max_q = false;
+  double actual_max_q;
+  for (int i = 0; i < num_actions; i++) {
+    int idx = new_state * num_actions + i;
+    if (!found_actual_max_q || Q[idx] > actual_max_q)
+      actual_max_q = Q[idx];
+  }
+
   if (!done) {
-    double delta = LEARNING_RATE * (reward + DISCOUNT * max_q -
+    double delta = LEARNING_RATE * (reward + DISCOUNT * actual_max_q -
                                     Q[state * num_actions + action]);
 
     Q[state * num_actions + action] += delta;
@@ -487,10 +545,10 @@ void Env::step() {
     Q[state * num_actions + action] = reward;
   }
 
-  avg_time_alive += TIMESTEP / tot_eps;
-
-  if (explore > EXPLORE_END)
-    explore -= reduction;
+  num_steps++;
+  time += TIMESTEP;
+  total_force += force;
+  current_run.push_back(force);
 }
 
 int main() {
@@ -498,26 +556,24 @@ int main() {
   FILE *f;
   f = fopen("test", "w");
 
-  // long num_eps = NUM_EPISODES;
   double reduction = (EXPLORE_START - EXPLORE_END) / NUM_EPISODES;
   printf("reduction: %lf\n", reduction);
   e.init(reduction, NUM_EPISODES);
   for (long i = 0; i < NUM_EPISODES; i++) {
 
     while (!e.is_done()) {
-      // double cart_position = e.cart_body->get_position();
-      // double pole_position = e.pole_body->get_position();
-      // printf("%f %f\n", pole_position, cart_position);
       e.step();
     }
 
-    if ((i + 1) % 100 == 0) {
-      printf("Episode %i done. rand_actions: %.2lf avg force: %.2lf Time "
-             "alive: %.2lf\n",
-             i + 1, e.get_avg_num_rand_actions(i), e.get_avg_force(i),
-             e.get_avg_time_alive(i));
+    e.new_episode();
+
+    if ((i + 1) % 10 == 0) {
+      printf("Episode %i done. avg: rand_actions: %3.2lf, force: %4.2lf, Time "
+             "alive: %2.2lf\n",
+             i + 1, e.get_avg_num_rand_actions(), e.get_avg_force(),
+             e.get_avg_time_alive());
+      e.reset_averages();
     }
-    e.reset();
   }
 
   while (!e.is_done()) {
@@ -525,17 +581,11 @@ int main() {
     double pole_position = e.pole_body->get_position();
     double cart_velocity = e.cart_body->get_velocity();
     double pole_velocity = e.pole_body->get_velocity();
-    fprintf(f, "%f %f %f %f %f\n", e.get_time(), pole_position, cart_position,
-            pole_velocity, cart_velocity);
+    double force = e.get_force();
+    fprintf(f, "%lf %lf %lf %lf %lf %lf\n", e.get_time(), pole_position,
+            cart_position, pole_velocity, cart_velocity, force);
     e.step();
   }
-  // printf("Episode %i done. Time alive: %lf\n", 101, e.get_time_alive());
 
-  // for (long i = 0; i < 100; i++) {
-  //   // double input = 5 * cos(i * TIMESTEP * 0.5);
-  //   double cart_position = e.cart_body->get_position();
-  //   double pole_position = e.pole_body->get_position();
-  //   printf("%f %f\n", pole_position, cart_position);
-  //   e.step();
-  // }
+  printf("max time alive: %lf\n", e.get_max_time_alive());
 }
