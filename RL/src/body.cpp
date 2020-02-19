@@ -2,15 +2,7 @@
 
 using namespace std;
 
-body::body(double mass, double start_position, double end_position_1,
-           double end_position_2, double start_velocity, double end_velocity_1,
-           double end_velocity_2, string name, long num_positions,
-           long num_velocities, R_Type r)
-    : mass(mass), start_position(start_position),
-      end_position_1(end_position_1), end_position_2(end_position_2),
-      start_velocity(start_velocity), end_velocity_1(end_velocity_1),
-      end_velocity_2(end_velocity_2), name(name), num_positions(num_positions),
-      num_velocities(num_velocities) {
+body::body(body_params bp, string name, R_Type r) : bp(bp), name(name), r(r) {
   this->r = r;
   this->init();
 }
@@ -19,39 +11,39 @@ bool body::update() {
   velocity += acceleration * TIMESTEP;
   position += velocity * TIMESTEP;
 
-  if (position < end_position_1 || position > end_position_2)
+  if (position < bp.end_position_1 || position > bp.end_position_2)
     return true;
 
-  if (position < end_velocity_1 || position > end_velocity_2)
+  if (position < bp.end_velocity_1 || position > bp.end_velocity_2)
     return true;
   return false;
 }
 
 void body::init() {
-  mid_point = num_positions / 2;
-  double current_position = end_position_1;
-  double position_delta =
-      abs((end_position_1 - end_position_2)) / (num_positions - 1);
+  mid_point = bp.num_positions / 2;
+  double current_position = bp.end_position_1;
+  position_delta =
+      abs((bp.end_position_1 - bp.end_position_2)) / (bp.num_positions - 1);
 
-  for (long i = 0; i < num_positions; i++) {
+  for (long i = 0; i < bp.num_positions; i++) {
     // printf("%s position %i = %f\n", name.c_str(), i, current_position);
     positions.push_back(current_position);
     current_position += position_delta;
   }
 
-  position = start_position;
+  position = bp.start_position;
 
-  double current_velocity = end_velocity_1;
-  double velocity_delta =
-      abs((end_velocity_1 - end_velocity_2)) / (num_velocities - 1);
+  double current_velocity = bp.end_velocity_1;
+  velocity_delta =
+      abs((bp.end_velocity_1 - bp.end_velocity_2)) / (bp.num_velocities - 1);
 
-  for (long i = 0; i < num_velocities; i++) {
+  for (long i = 0; i < bp.num_velocities; i++) {
     // printf("%s velocity %i = %f\n", name.c_str(), i, current_velocity);
     velocities.push_back(current_velocity);
     current_velocity += velocity_delta;
   }
 
-  velocity = start_velocity;
+  velocity = bp.start_velocity;
 }
 
 long body::get_R(long i) {
@@ -125,7 +117,24 @@ long body::get_state() {
 long body::get_num_states() { return velocities.size() * positions.size(); }
 
 void body::reset() {
-  position = start_position;
+  position = bp.start_position;
   velocity = 0;
   acceleration = 0;
+}
+
+void body::print_params(FILE *f) {
+  fprintf(f,
+          "%s:\n"
+          "POSITION START %lf\n"
+          "POSITION DELTA %lf\n"
+          "POSITION_END_1 %lf\n"
+          "POSITION_END_2 %lf\n"
+          "VELOCITY START %lf\n"
+          "VELOCITY DELTA %lf\n"
+          "VELOCITY_END_1 %lf\n"
+          "VELOCITY_END_2 %lf\n\n",
+          name.c_str(), this->bp.start_position, this->position_delta,
+          this->bp.end_position_1, this->bp.end_position_2,
+          this->bp.start_velocity, this->velocity_delta,
+          this->bp.end_velocity_1, this->bp.end_velocity_2);
 }

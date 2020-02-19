@@ -8,54 +8,35 @@
 #include <vector>
 
 #include "body.h"
-#include "cart.h"
 #include "params.h"
-#include "pole.h"
+
+/*equations of motion adopted from
+ * https://coneural.org/florian/papers/05_cart_pole.pdf*/
 
 class Env {
 public:
-  void reset_averages();
-  void new_episode();
-  void init(double r, long e);
-  void step();
+  Env(env_params e);
+  ~Env();
+  void reset_env();
+  void step(double force);
+  void step(int action);
+  long get_state();
+  long get_reward();
+  long get_num_states() { return num_states; }
+  int get_num_actions() { return num_actions; }
   bool is_done() { return done; }
   double get_force() { return force; }
   double get_time() { return time; }
-  double get_avg_force() { return avg_force; }
-  double get_avg_time_alive() { return avg_time_alive; }
-  double get_avg_num_rand_actions() { return avg_rand_actions; }
-  double get_max_time_alive() { return max_time_alive; }
-  pole *pole_body;
-  cart *cart_body;
+  body *pole_body;
+  body *cart_body;
+  const env_params ep;
 
 private:
-  void reset_env();
-  std::vector<double> P; /*state transistion probability*/
-  std::vector<double> Q; /*state value*/
-  // vector<long> R;    /*reward*/
+  void init();
   long num_states;
-  long num_actions;
+  int num_actions;
 
-  /*per episode variables*/
-  std::vector<double> current_run; /*force applied at each timestep*/
+  double time;  /*running time of the episode*/
+  double force; /*force applied at the current step*/
   bool done;
-  double force;              /*force applied at current step*/
-  double total_force;        /*force applied over the whole episode*/
-  double total_rand_actions; /*number of random actions taken in this episode*/
-  long num_steps;            /*number of steps in the episode*/
-  double time;               /*running time of the episode*/
-
-  double explore;   /*chance to take a random action*/
-  double reduction; /*amount to reduce explore by after an episode*/
-  long tot_eps;     /*total number of episodes*/
-
-  /*best run*/
-  std::vector<double> best_run;
-  double max_time_alive; /*maximum recorded lifespan*/
-
-  /*cumulative moving average vars*/
-  double avg_force;
-  double avg_time_alive;
-  double avg_rand_actions;
-  long eps_elapsed; /*episodes elapsed since last avg_reset*/
 };

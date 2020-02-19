@@ -6,14 +6,19 @@ DEST = ./obj
 
 CXX = g++
 
-all: $(DEST) $(OBJ_FILES) $(TARGET)
+all: $(INC_FILES) $(DEST) $(OBJ_FILES) $(TARGET)
+
+clean:
+	rm -rf $(DEST) $(TARGET)
 
 $(DEST):
 	mkdir -p $@
 	echo $(OBJ_FILES)
 
-%.o: ./src/%.cpp
-	$(CXX) -o $(DEST)/$@ -c $< -I./include
+$(OBJ_FILES): $(INC_FILES)
 
-$(TARGET): $(OBJ_FILES) $(INC_FILES) main.cpp
+obj/%.o: ./src/%.cpp
+	$(CXX) -o $@ -c $< -I./include
+
+$(TARGET): $(OBJ_FILES) main.cpp
 	$(CXX) -o $@ $(OBJ_FILES) main.cpp -I./include

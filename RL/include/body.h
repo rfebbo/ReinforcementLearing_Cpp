@@ -10,10 +10,7 @@ enum class R_Type { ENDS, DISTANCE }; // reinforcement type
 
 class body {
 public:
-  body(double mass, double start_position, double end_position_1,
-       double end_position_2, double start_velocity, double end_velocity_1,
-       double end_velocity_2, std::string name, long num_positions,
-       long num_velocities, R_Type r = R_Type::ENDS);
+  body(body_params bp, std::string name, R_Type r = R_Type::ENDS);
   ~body(){};
   void init();
   R_Type r;
@@ -27,7 +24,10 @@ public:
   void reset();
   double get_velocity() { return velocity; }
   double get_position() { return position; }
-  double get_mass() { return mass; }
+  double get_mass() { return bp.mass; }
+  double get_position_delta() { return position_delta; }
+  double get_velocity_delta() { return velocity_delta; }
+  void print_params(FILE *f);
 
 protected:
   /*instantaneous values*/
@@ -35,22 +35,15 @@ protected:
   double velocity;     /*inst vel*/
   double position;     /*inst position*/
 
-  std::string name;
-  double mass;
-
   /*Discretization values*/
   long mid_point;
+  double position_delta;
+  double velocity_delta;
 
   std::vector<double> positions;
   std::vector<double> velocities;
 
-  double start_velocity;
-  double end_velocity_1;
-  double end_velocity_2;
+  std::string name;
 
-  double start_position;
-  double end_position_1;
-  double end_position_2;
-  long num_positions;
-  long num_velocities;
+  const body_params bp;
 };
