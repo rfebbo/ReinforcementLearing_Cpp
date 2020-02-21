@@ -5,23 +5,23 @@ using namespace std;
 Env::Env(env_params ep) : ep(ep) { this->init(); }
 
 Env::~Env() {
-  delete pole_body;
-  delete cart_body;
+  delete this->pole_body;
+  delete this->cart_body;
 }
 
 void Env::reset_env() {
-  cart_body->reset();
-  pole_body->reset();
-  done = false;
-  force = 0;
-  time = 0;
+  this->cart_body->reset();
+  this->pole_body->reset();
+  this->done = false;
+  this->force = 0;
+  this->time = 0;
 }
 
 void Env::init() {
   // srand(time(NULL));
   srand(0);
-  pole_body = new body(ep.p, "POLE", R_Type::DISTANCE);
-  cart_body = new body(ep.c, "CART", R_Type::DISTANCE);
+  pole_body = new body(ep.p, "POLE");
+  cart_body = new body(ep.c, "CART");
   num_states = pole_body->get_num_states() * cart_body->get_num_states();
   num_actions = 3;
   reset_env();

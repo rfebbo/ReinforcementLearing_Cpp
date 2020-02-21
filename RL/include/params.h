@@ -3,6 +3,8 @@
 #define G 9.81
 #define TIMESTEP 0.01
 
+enum class R_Type { ENDS, DISTANCE }; // reinforcement type
+
 struct rl_agent_params {
   /*Hyperparameters*/
   int num_episodes;
@@ -13,6 +15,7 @@ struct rl_agent_params {
 };
 
 struct body_params {
+  R_Type r_type;
   /*simulation parameters*/
   double mass;
   double start_position;

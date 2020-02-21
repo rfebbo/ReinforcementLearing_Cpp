@@ -2,10 +2,7 @@
 
 using namespace std;
 
-body::body(body_params bp, string name, R_Type r) : bp(bp), name(name), r(r) {
-  this->r = r;
-  this->init();
-}
+body::body(body_params bp, string name) : bp(bp), name(name) { this->init(); }
 
 bool body::update() {
   velocity += acceleration * TIMESTEP;
@@ -47,7 +44,7 @@ void body::init() {
 }
 
 long body::get_R(long i) {
-  switch (r) {
+  switch (bp.r_type) {
   case R_Type::ENDS: {
     if (i == positions.size() - 1 || i == 0)
       return -1;
@@ -126,15 +123,16 @@ void body::print_params(FILE *f) {
   fprintf(f,
           "%s:\n"
           "POSITION START %lf\n"
-          "POSITION DELTA %lf\n"
+          "POSITION DELTA %lf(%i)\n"
           "POSITION_END_1 %lf\n"
           "POSITION_END_2 %lf\n"
           "VELOCITY START %lf\n"
-          "VELOCITY DELTA %lf\n"
+          "VELOCITY DELTA %lf(%i)\n"
           "VELOCITY_END_1 %lf\n"
           "VELOCITY_END_2 %lf\n\n",
           name.c_str(), this->bp.start_position, this->position_delta,
-          this->bp.end_position_1, this->bp.end_position_2,
-          this->bp.start_velocity, this->velocity_delta,
+          this->bp.num_positions, this->bp.end_position_1,
+          this->bp.end_position_2, this->bp.start_velocity,
+          this->velocity_delta, this->bp.num_velocities,
           this->bp.end_velocity_1, this->bp.end_velocity_2);
 }

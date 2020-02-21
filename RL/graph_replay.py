@@ -1,10 +1,11 @@
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=0.8)
 
-f = open("test","r")
+f = open(sys.argv[1],"r")
 lines = f.readlines()
 
 y = [] #time

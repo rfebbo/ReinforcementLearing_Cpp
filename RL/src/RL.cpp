@@ -11,39 +11,48 @@ void RL::init() {
   explore = p.explore_start;
 
   this->reduction = (p.explore_start - p.explore_end) / p.num_episodes;
+  // printf("Q size: %i\n", num_states * num_actions);
 
   for (long i = 0; i < num_states * num_actions; i++) {
     this->Q.push_back(((rand() / static_cast<double>(RAND_MAX)) * 2) - 1);
     // printf("Q %i %f\n", i, Q.back());
   }
 
-  printf("Q size(%i): %.2lf MB\n", Q.size(),
-         (static_cast<double>(Q.size()) * sizeof(double)) / 1048576);
-
   cpu_time = nanoseconds::zero();
-  total_cpu_time = milliseconds::zero();
+  total_cpu_time = nanoseconds::zero();
+  total_eps_elapsed = 0;
+  total_actions_taken = 0;
+  max_time_alive = 0;
 }
 
 void RL::new_episode() {
+  /*compute averages*/
   eps_elapsed++;
+  total_eps_elapsed++;
 
-  avg_cpu_time += ((cpu_time.count() / time) - avg_cpu_time) / eps_elapsed;
+  avg_cpu_time += ((cpu_time.count() / num_steps) - avg_cpu_time) / eps_elapsed;
   avg_action += ((total_action / time) - avg_action) / eps_elapsed;
   avg_time_alive += (time - avg_time_alive) / eps_elapsed;
   avg_rand_actions +=
       ((total_rand_actions / time) - avg_rand_actions) / eps_elapsed;
 
+  /*save best time*/
   if (time > max_time_alive) {
     max_time_alive = time;
     best_run = current_run;
   }
 
+  /*decrement explore*/
   if (explore > p.explore_end)
     explore -= reduction;
 
+  /*increment totals*/
+  // total_actions_taken += num_steps;
+  total_cpu_time += cpu_time;
+
+  /*reset vars for next episode*/
   time = 0;
   num_steps = 0;
-  total_cpu_time += duration_cast<milliseconds>(cpu_time);
   cpu_time = nanoseconds::zero();
   total_action = 0;
   total_rand_actions = 0;
@@ -61,8 +70,8 @@ void RL::reset_averages() {
 int RL::get_action(long state) {
 
   auto start = steady_clock::now();
-
   int action = -1;
+  total_actions_taken++;
   bool rand_action = false;
   double randn = rand() / static_cast<double>(RAND_MAX);
 
@@ -125,12 +134,16 @@ void RL::update_q(long prev_state, long cur_state, long prev_action,
 }
 
 void RL::print_params(FILE *f) {
+
   fprintf(f,
           "NUM_EPISODES %i\n"
           "EXPLORE_START %lf\n"
           "EXPLORE_END %lf\n"
           "DISCOUNT %lf\n"
-          "LEARNING_RATE %lf\n\n",
+          "LEARNING_RATE %lf\n"
+          "TOTAL ACTIONS TAKEN %i\n"
+          "Q size(%i): %.2lf MB\n\n",
           this->p.num_episodes, this->p.explore_start, this->p.explore_end,
-          this->p.discount, this->p.learning_rate);
+          this->p.discount, this->p.learning_rate, this->total_actions_taken,
+          Q.size(), (static_cast<double>(Q.size()) * sizeof(double)) / 1048576);
 }
