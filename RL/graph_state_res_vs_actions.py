@@ -18,11 +18,14 @@ def add_plot(avg,plt,title,xlabel,ylabel,pltnum,ytick):
     list1 = sorted(avg.items())
     y1,x1 = zip(*list1)     
 
-    xtick = np.arange(min(y1),max(y1)+1,(max(y1)-min(y1))/(len(y1)-1))
-    
+    print(min(y1),max(y1)+1,(max(y1)-min(y1))/(len(y1)),len(y1))
+
     plt.subplot(pltnum)
-    plt.plot(y1, x1, 'o')
-    plt.xticks(xtick)
+    if(len(y1) > 1 and len(y1) < 10):
+        xtick = np.arange(min(y1),max(y1)+1,((max(y1)-min(y1))/(len(y1)-1)))
+        plt.xticks(xtick)
+    
+    plt.plot(y1, x1, 'b')
     plt.yticks(ytick)
     plt.tick_params(axis ='x', rotation =-50) 
     plt.title(title)

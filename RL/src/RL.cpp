@@ -147,3 +147,10 @@ void RL::print_params(FILE *f) {
           this->p.discount, this->p.learning_rate, this->total_actions_taken,
           Q.size(), (static_cast<double>(Q.size()) * sizeof(double)) / 1048576);
 }
+
+void RL::print_Q(FILE *f) {
+  for (long i = 0; i < num_states; i++) {
+    fprintf(f, "%lf %lf %lf\n", Q[i * num_actions], Q[i * num_actions + 1],
+            Q[i * num_actions + 2]);
+  }
+}

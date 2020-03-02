@@ -27,6 +27,7 @@ public:
   long get_total_actions_taken() { return total_actions_taken; }
   size_t get_q_size() { return Q.size(); }
   void print_params(FILE *f);
+  void print_Q(FILE *f);
   const rl_agent_params p;
 
 private:

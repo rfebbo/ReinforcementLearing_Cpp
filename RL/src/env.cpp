@@ -53,7 +53,8 @@ void Env::step(double input) {
   cart_body->set_acceleration(c_a);
 
   done |= pole_body->update();
-  done |= cart_body->update();
+  // done |=
+  cart_body->update();
 
   time += TIMESTEP;
   force = input;

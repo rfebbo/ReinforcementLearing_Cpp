@@ -36,6 +36,9 @@ for l in lines:
         x5.append(float(numbers[5]))
 
 
+
+plt.suptitle(sys.argv[1], fontsize=16)
+
 plt.subplot(2,2,1)
 plt.plot(y, x1, 'b')
 plt.title('pole angle')
