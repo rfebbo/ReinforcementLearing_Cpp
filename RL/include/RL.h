@@ -13,8 +13,8 @@ public:
   void reset_averages();
   int get_action(long state);
   std::vector<int> get_best() { return best_run; }
-  void update_q(long prev_state, long cur_state, long prev_action, long reward,
-                bool done);
+  void update_q(long prev_state, long cur_state, long prev_action,
+                double reward, bool done);
   double get_time() { return time; }
   double get_avg_cpu_time() { return avg_cpu_time; }
   double get_avg_action() { return avg_action; }
@@ -29,6 +29,7 @@ public:
   void print_params(FILE *f);
   void print_Q(FILE *f);
   const rl_agent_params p;
+  double min_reward;
 
 private:
   void init();
@@ -62,4 +63,6 @@ private:
   double avg_time_alive{0};
   double avg_rand_actions{0};
   long eps_elapsed{0}; /*episodes elapsed since last avg_reset*/
+
+  bool min_reward_set;
 };

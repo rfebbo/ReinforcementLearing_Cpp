@@ -40,9 +40,10 @@ q_table3 = []
 
 for l in lines:
     numbers = re.findall(r"[-+]?\d*\.\d+|\d+",l)
-    q_table1.append(float(numbers[0]))
-    q_table2.append(float(numbers[1]))
-    q_table3.append(float(numbers[2]))
+    if max(abs(float(numbers[0])),abs(float(numbers[1])),abs(float(numbers[2]))) < 1:
+        q_table1.append(float(numbers[0]))
+        q_table2.append(float(numbers[1]))
+        q_table3.append(float(numbers[2]))
     
 
 
@@ -54,7 +55,8 @@ plt.suptitle(sys.argv[1], fontsize=16)
 ymax = max((max(q_table1),max(q_table2),max(q_table3)))
 ymin = min((min(q_table1),min(q_table2),min(q_table3)))
 print(ymin,ymax)
-ytick = np.arange(ymin,ymax+1,(ymax-ymin)/5)
+# ytick = np.arange(ymin,ymax+1,(ymax-ymin)/5)
+ytick = np.arange(0,1.1,0.1)
 print(ytick)
 
 add_plot(q_table1,plt,"left","","",131,ytick)

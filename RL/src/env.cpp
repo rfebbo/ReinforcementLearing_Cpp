@@ -80,4 +80,4 @@ long Env::get_state() {
          cart_body->get_state();
 }
 
-long Env::get_reward() { return cart_body->get_R() + pole_body->get_R(); }
+double Env::get_reward() { return cart_body->get_R() + pole_body->get_R(); }

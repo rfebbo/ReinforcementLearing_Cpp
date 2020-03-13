@@ -3,7 +3,7 @@
 #define G 9.81
 #define TIMESTEP 0.01
 
-enum class R_Type { ENDS, DISTANCE }; // reinforcement type
+enum class R_Type { ENDS, DISTANCE, POSITIVE_DISTANCE }; // reinforcement type
 
 struct rl_agent_params {
   /*Hyperparameters*/
@@ -12,6 +12,7 @@ struct rl_agent_params {
   double explore_end;
   double discount;
   double learning_rate;
+  double reward_incentive;
 };
 
 struct body_params {

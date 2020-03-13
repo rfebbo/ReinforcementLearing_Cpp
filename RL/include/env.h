@@ -21,7 +21,7 @@ public:
   void step(double force);
   void step(int action);
   long get_state();
-  long get_reward();
+  double get_reward();
   long get_num_states() { return num_states; }
   int get_num_actions() { return num_actions; }
   bool is_done() { return done; }

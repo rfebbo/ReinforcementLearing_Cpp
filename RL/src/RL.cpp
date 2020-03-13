@@ -14,7 +14,7 @@ void RL::init() {
   // printf("Q size: %i\n", num_states * num_actions);
 
   for (long i = 0; i < num_states * num_actions; i++) {
-    this->Q.push_back(((rand() / static_cast<double>(RAND_MAX)) * 2) - 1);
+    this->Q.push_back(((rand() / static_cast<double>(RAND_MAX))));
     // printf("Q %i %f\n", i, Q.back());
   }
 
@@ -23,6 +23,8 @@ void RL::init() {
   total_eps_elapsed = 0;
   total_actions_taken = 0;
   max_time_alive = 0;
+  min_reward = 0;
+  min_reward_set = false;
 }
 
 void RL::new_episode() {
@@ -109,7 +111,7 @@ int RL::get_action(long state) {
 }
 
 void RL::update_q(long prev_state, long cur_state, long prev_action,
-                  long reward, bool done) {
+                  double reward, bool done) {
 
   bool found_actual_max_q = false;
   double max_q;
@@ -123,13 +125,27 @@ void RL::update_q(long prev_state, long cur_state, long prev_action,
 
   if (!done) {
     double delta =
-        p.learning_rate * (reward + p.discount * max_q -
+        p.learning_rate * (p.reward_incentive * reward + p.discount * max_q -
                            Q[prev_state * num_actions + prev_action]);
 
     Q[prev_state * num_actions + prev_action] += delta;
 
   } else {
-    Q[prev_state * num_actions + prev_action] = reward;
+    Q[prev_state * num_actions + prev_action] = p.reward_incentive * reward;
+    if (!min_reward_set)
+      min_reward = reward;
+    else if (min_reward > reward)
+      min_reward = reward;
+  }
+
+  // normalize Q values
+  double sum = 0;
+  for (int i = 0; i < num_actions; i++) {
+    sum += Q[prev_state * num_actions + i];
+  }
+
+  for (int i = 0; i < num_actions; i++) {
+    Q[prev_state * num_actions + i] /= sum;
   }
 }
 

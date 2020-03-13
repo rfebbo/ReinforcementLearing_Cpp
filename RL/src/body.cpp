@@ -18,6 +18,8 @@ bool body::update() {
 
 void body::init() {
   mid_point = bp.num_positions / 2;
+  max_sqrd = pow(bp.end_position_2, 2);
+
   double current_position = bp.end_position_1;
   position_delta =
       abs((bp.end_position_1 - bp.end_position_2)) / (bp.num_positions - 1);
@@ -43,21 +45,26 @@ void body::init() {
   velocity = bp.start_velocity;
 }
 
-long body::get_R(long i) {
+double body::get_R(double p) {
   switch (bp.r_type) {
   case R_Type::ENDS: {
-    if (i == positions.size() - 1 || i == 0)
+    if (p >= bp.end_position_2 || p <= bp.end_position_1)
       return -1;
     return 0;
     break;
   }
   case R_Type::DISTANCE: {
-    if (i == mid_point)
+    if (p == positions[mid_point])
       return 0;
 
-    long distance = i - mid_point;
+    double distance = p - positions[mid_point];
 
     return -(distance * distance);
+    break;
+  }
+  case R_Type::POSITIVE_DISTANCE: {
+    double rv = (max_sqrd - pow(p, 2)) / max_sqrd;
+    return rv;
     break;
   }
   default:
@@ -68,22 +75,22 @@ long body::get_R(long i) {
   return 0;
 }
 
-long body::get_R(double p) {
-  double min_distance;
-  long min_distance_idx = -1;
-  for (long i = 0; i < positions.size(); i++) {
-    double distance = abs(p - positions[i]);
+// long body::get_R(double p) {
+//   double min_distance;
+//   long min_distance_idx = -1;
+//   for (long i = 0; i < positions.size(); i++) {
+//     double distance = abs(p - positions[i]);
 
-    if (min_distance_idx == -1 || distance < min_distance) {
-      min_distance_idx = i;
-      min_distance = distance;
-    }
-  }
+//     if (min_distance_idx == -1 || distance < min_distance) {
+//       min_distance_idx = i;
+//       min_distance = distance;
+//     }
+//   }
 
-  return get_R(min_distance_idx);
-}
+//   return get_R(min_distance_idx);
+// }
 
-long body::get_R() { return get_R(this->position); }
+double body::get_R() { return get_R(this->position); }
 
 long body::get_state() {
   double min_distance;

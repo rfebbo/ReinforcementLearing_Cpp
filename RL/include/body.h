@@ -11,9 +11,8 @@ public:
   body(body_params bp, std::string name);
   ~body(){};
   void init();
-  long get_R(long i);
-  long get_R(double p);
-  long get_R();
+  double get_R(double p);
+  double get_R();
   long get_state();
   long get_num_states();
   void set_acceleration(double a) { acceleration = a; }
@@ -41,6 +40,8 @@ protected:
   std::vector<double> velocities;
 
   std::string name;
+
+  double max_sqrd;
 
   const body_params bp;
 };
