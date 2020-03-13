@@ -123,20 +123,21 @@ void RL::update_q(long prev_state, long cur_state, long prev_action,
     }
   }
 
-  if (!done) {
-    double delta =
-        p.learning_rate * (p.reward_incentive * reward + p.discount * max_q -
-                           Q[prev_state * num_actions + prev_action]);
+  // if (!done) {
+  double delta =
+      p.learning_rate * (p.reward_incentive * reward + p.discount * max_q -
+                         Q[prev_state * num_actions + prev_action]);
 
-    Q[prev_state * num_actions + prev_action] += delta;
+  Q[prev_state * num_actions + prev_action] += delta;
 
-  } else {
-    Q[prev_state * num_actions + prev_action] = p.reward_incentive * reward;
-    if (!min_reward_set)
-      min_reward = reward;
-    else if (min_reward > reward)
-      min_reward = reward;
-  }
+  // } else {
+  //   Q[prev_state * num_actions + prev_action] = p.reward_incentive * reward;
+  // }
+
+  if (!min_reward_set)
+    min_reward = reward;
+  else if (min_reward > reward)
+    min_reward = reward;
 
   // normalize Q values
   double sum = 0;
@@ -147,6 +148,12 @@ void RL::update_q(long prev_state, long cur_state, long prev_action,
   for (int i = 0; i < num_actions; i++) {
     Q[prev_state * num_actions + i] /= sum;
   }
+  sum = 0;
+  for (int i = 0; i < num_actions; i++) {
+    sum += Q[prev_state * num_actions + i];
+  }
+  if (sum > 1.000001)
+    printf("normalize failed\n");
 }
 
 void RL::print_params(FILE *f) {

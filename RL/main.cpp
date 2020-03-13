@@ -30,7 +30,7 @@ int main() {
   env_params ep;  /*sim params for environment*/
   rl_agent_params rlap;
 
-  cp.r_type = R_Type::POSITIVE_DISTANCE;
+  cp.r_type = R_Type::DISTANCE;
   cp.mass = 20;
   cp.start_position = 0;
   cp.start_velocity = 0;
@@ -41,7 +41,7 @@ int main() {
   cp.end_velocity_1 = -1;
   cp.end_velocity_2 = 1;
 
-  pp.r_type = R_Type::POSITIVE_DISTANCE;
+  pp.r_type = R_Type::DISTANCE;
   pp.mass = 10;
   pp.start_position = 0.01;
   pp.start_velocity = 0;
@@ -62,9 +62,9 @@ int main() {
   rlap.explore_end = 0.0;
   rlap.discount = 0.9;
   rlap.learning_rate = 0.2;
-  rlap.reward_incentive = 0.002;
+  rlap.reward_incentive = 1;
 
-  string foldername = "./output14/";
+  string foldername = "./output15/";
   run_agent(ep, rlap, foldername);
 }
 

@@ -49,13 +49,13 @@ for l in lines:
 
 # print((0,max(actions),f,(max(actions)/float(pole_pos_count[number]))/5))
 # print(ytick)
-plt.suptitle(sys.argv[1], fontsize=16)
+# plt.suptitle(sys.argv[1], fontsize=16)
 
 
 ymax = max((max(q_table1),max(q_table2),max(q_table3)))
 ymin = min((min(q_table1),min(q_table2),min(q_table3)))
 print(ymin,ymax)
-# ytick = np.arange(ymin,ymax+1,(ymax-ymin)/5)
+# ytick = np.arange(ymin,ymax,(ymax-ymin)/5)
 ytick = np.arange(0,1.1,0.1)
 print(ytick)
 
