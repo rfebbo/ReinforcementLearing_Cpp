@@ -1,0 +1,1 @@
+This repository contains code for reinforcemnt learning in a finite state environment based on cart-pole dynamics.
