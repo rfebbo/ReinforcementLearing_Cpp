@@ -1,4 +1,4 @@
-This repository contains code for reinforcement learning in a finite state environment based on cart-pole dynamics. This code was developed for CURENT at The University of Tennessee.
+This repository contains code for reinforcement learning in a finite state environment based on cart-pole dynamics. This code was developed for CURENT at The University of Tennessee Knoxville.
 
 ![image info](./info/readme_pic-1.jpg)
 ![image info](info/readme_pic-2.jpg)
