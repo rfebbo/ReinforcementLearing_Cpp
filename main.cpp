@@ -64,7 +64,7 @@ int main() {
   rlap.learning_rate = 0.2;
   rlap.reward_incentive = 1;
 
-  string foldername = "./output15/";
+  string foldername = "./outputs/output16/";
   run_agent(ep, rlap, foldername);
 }
 

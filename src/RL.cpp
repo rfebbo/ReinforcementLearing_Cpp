@@ -124,9 +124,10 @@ void RL::update_q(long prev_state, long cur_state, long prev_action,
   }
 
   // if (!done) {
-  double delta =
-      p.learning_rate * (p.reward_incentive * reward + p.discount * max_q -
-                         Q[prev_state * num_actions + prev_action]);
+  double delta = p.reward_incentive * reward;
+  delta += p.discount * max_q;
+  delta -= Q[prev_state * num_actions + prev_action];
+  delta *= p.learning_rate;
 
   Q[prev_state * num_actions + prev_action] += delta;
 
@@ -140,20 +141,20 @@ void RL::update_q(long prev_state, long cur_state, long prev_action,
     min_reward = reward;
 
   // normalize Q values
-  double sum = 0;
-  for (int i = 0; i < num_actions; i++) {
-    sum += Q[prev_state * num_actions + i];
-  }
+  // double sum = 0;
+  // for (int i = 0; i < num_actions; i++) {
+  //   sum += Q[prev_state * num_actions + i];
+  // }
 
-  for (int i = 0; i < num_actions; i++) {
-    Q[prev_state * num_actions + i] /= sum;
-  }
-  sum = 0;
-  for (int i = 0; i < num_actions; i++) {
-    sum += Q[prev_state * num_actions + i];
-  }
-  if (sum > 1.000001)
-    printf("normalize failed\n");
+  // for (int i = 0; i < num_actions; i++) {
+  //   Q[prev_state * num_actions + i] /= sum;
+  // }
+  // sum = 0;
+  // for (int i = 0; i < num_actions; i++) {
+  //   sum += Q[prev_state * num_actions + i];
+  // }
+  // if (sum > 1.000001)
+  //   printf("normalize failed\n");
 }
 
 void RL::print_params(FILE *f) {

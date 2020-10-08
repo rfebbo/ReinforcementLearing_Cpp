@@ -64,7 +64,7 @@ void Env::step(int action) {
   double new_force;
 
   if (action == 0)
-    new_force = -ep.input_force;
+    new_force = -ep.input_force; // predefined constant
   else if (action == 1)
     new_force = 0;
   else if (action == 2)
@@ -72,7 +72,8 @@ void Env::step(int action) {
   else
     fprintf(stderr, "INVALID ACTION\n");
 
-  this->step(new_force);
+  this->step(new_force); // call function containing
+                         // equations of motion to simulate
 }
 
 long Env::get_state() {
